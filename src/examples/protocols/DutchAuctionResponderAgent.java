@@ -25,7 +25,7 @@ public class DutchAuctionResponderAgent extends Agent
 		addBehaviour(new DutchAuctionResponder(this) {
 			private static final long	serialVersionUID	= -8438328424220521732L;
 			
-//			@Override
+			@Override
 			protected boolean handleCfp(ACLMessage cfp)
 			{
 				System.out.println("Agent " + getLocalName() + ": CFP received from " + cfp.getSender().getName() + ". Action is " + cfp.getContent());
@@ -33,7 +33,7 @@ public class DutchAuctionResponderAgent extends Agent
 				return shouldPropose(cfp);
 			}
 			
-//			@Override
+			@Override
 			protected Object handleAcceptProposal(ACLMessage cfp, ACLMessage accept) throws FailureException
 			{
 				log("Proposal accepted");
@@ -50,27 +50,28 @@ public class DutchAuctionResponderAgent extends Agent
 				}
 			}
 			
-//			@Override
-			protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject)
+			@Override
+			protected void handleRejectProposal(ACLMessage cfp, ACLMessage reject)
 			{
 				log("Proposal rejected");
 			}
 			
-			/**
-			 * To override;
-			 */
-			protected boolean shouldPropose(ACLMessage cfp)
-			{
-				return (Math.random() > 0.1);
-			}
-			
-			/**
-			 * To override;
-			 */
-			protected boolean performAction(ACLMessage cfp, ACLMessage accept)
-			{
-				return (Math.random() > 0.1);
-			}
 		});
+	}
+	
+	/**
+	 * To override;
+	 */
+	protected boolean shouldPropose(ACLMessage cfp)
+	{
+		return (Math.random() > 0.1);
+	}
+	
+	/**
+	 * To override;
+	 */
+	protected boolean performAction(ACLMessage cfp, ACLMessage accept)
+	{
+		return (Math.random() > 0.1);
 	}
 }
