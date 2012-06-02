@@ -22,7 +22,7 @@ public class DutchAuctionResponderAgent extends Agent
 		
 		log("booting agent; waiting for CFP");
 		
-		addBehaviour(new DutchAuctionResponder(this, null, null, false) {
+		addBehaviour(new DutchAuctionResponder(this) {
 			private static final long	serialVersionUID	= -8438328424220521732L;
 			
 //			@Override
