@@ -5,7 +5,7 @@ import jade.core.behaviours.*;
 import jade.lang.acl.*;
 import jade.proto.*;
 import jade.proto.states.*;
-import jade.domain.FIPAException;
+import jade.domain.*;
 import jade.domain.FIPAAgentManagement.*;
 
 public class DutchAuctionResponder extends SSResponder {
@@ -53,7 +53,6 @@ public class DutchAuctionResponder extends SSResponder {
 		registerTransition(SEND_REPLY, RECEIVE_NEXT, ACLMessage.PROPOSE);
 
 		/* handle RECEIVE_NEXT & CHECK_IN_SEQ */
-		/* TODO: handleAcceptProposal and handleRejectProposal */
 		registerTransition(RECEIVE_NEXT, HANDLE_REJECT_PROPOSAL, MsgReceiver.TIMEOUT_EXPIRED); 
 		registerTransition(CHECK_IN_SEQ, HANDLE_ACCEPT_PROPOSAL, ACLMessage.ACCEPT_PROPOSAL, new String[]{SEND_REPLY}); 
 		registerTransition(CHECK_IN_SEQ, HANDLE_REJECT_PROPOSAL, ACLMessage.REJECT_PROPOSAL); 
