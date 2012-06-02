@@ -40,6 +40,7 @@ public class DutchAuctionResponder extends SSResponder {
 		b = new CfpHandler(myAgent);
 		registerFirstState(b, HANDLE_CFP);
 		b.setDataStore(getDataStore());
+		registerTransition(HANDLE_CFP, SEND_REPLY, CfpHandler.CFP_ACCEPTED);
 		registerDefaultTransition(HANDLE_CFP, SEND_REPLY);
 
 		/* handle SEND_REPLY */
@@ -57,6 +58,9 @@ public class DutchAuctionResponder extends SSResponder {
 	}
 
 	private static class CfpHandler extends OneShotBehaviour {
+		public static final int CFP_ACCEPTED = -4242;
+		private int ret;
+
 		public CfpHandler(Agent a) {
 			super(a);
 		}
@@ -64,8 +68,12 @@ public class DutchAuctionResponder extends SSResponder {
 		public void action() {
 			DutchAuctionResponder parent = (DutchAuctionResponder) getParent();
 			if (parent.handleCfp((ACLMessage) getDataStore().get(parent.CFP_KEY))) {
-				/* TODO: send reply */
+				ret = CFP_ACCEPTED;
 			}
+		}
+
+		public int onEnd() {
+			return ret;
 		}
 	}
 }
