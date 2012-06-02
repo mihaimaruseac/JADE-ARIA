@@ -11,6 +11,8 @@ import jade.domain.FIPAAgentManagement.*;
 public class DutchAuctionResponder extends SSResponder {
 	public final String CFP_KEY	= INITIATION_KEY;
 	public final String SOA_KEY	= "__SOA" + CFP_KEY;
+	public final String ACCEPT_PROPOSAL_KEY = RECEIVED_KEY;
+	public final String REJECT_PROPOSAL_KEY = RECEIVED_KEY;
 
 	public static final String RECEIVE_INFORM_START_OF_AUCTION = "Receive-Inform-Start-Of-Auction";
 	public static final String RECEIVE_CFP = "Receive-Cfp";
@@ -70,11 +72,11 @@ public class DutchAuctionResponder extends SSResponder {
 		return false;
 	}
 
-	protected Object handleAcceptProposal() {
+	protected Object handleAcceptProposal(ACLMessage cfp, ACLMessage accept) throws FailureException {
 		return null;
 	}
 
-	protected void handleRejectProposal() {
+	protected void handleRejectProposal(ACLMessage cfp, ACLMessage reject) {
 	}
 
 	private static class CfpHandler extends OneShotBehaviour {
@@ -107,7 +109,14 @@ public class DutchAuctionResponder extends SSResponder {
 		
 		public void action() {
 			DutchAuctionResponder parent = (DutchAuctionResponder) getParent();
-			parent.handleAcceptProposal();
+			try {
+				ACLMessage cfp = (ACLMessage) getDataStore().get(parent.CFP_KEY);
+				ACLMessage accept = (ACLMessage) getDataStore().get(parent.ACCEPT_PROPOSAL_KEY);
+				parent.handleAcceptProposal(cfp, accept);
+			}
+			catch (FIPAException fe) {
+				fe.getACLMessage();
+			}
 		}
 	}
 	
@@ -122,7 +131,9 @@ public class DutchAuctionResponder extends SSResponder {
 		
 		public void action() {
 			DutchAuctionResponder parent = (DutchAuctionResponder) getParent();
-			parent.handleRejectProposal();
+			ACLMessage cfp = (ACLMessage) getDataStore().get(parent.CFP_KEY);
+			ACLMessage reject = (ACLMessage) getDataStore().get(parent.REJECT_PROPOSAL_KEY);
+			parent.handleRejectProposal(cfp, reject);
 		}
 	}
 }
