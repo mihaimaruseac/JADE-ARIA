@@ -31,12 +31,13 @@ public class DutchAuctionResponder extends SSResponder {
 		Behaviour b = null;
 
 		/* receive INFORM_START_OF_AUCTION */
-		b = new MsgReceiver(a, /*mt*/null, -1, getDataStore(), SOA_KEY);
+		MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_DUTCH_AUCTION),MessageTemplate.MatchPerformative(ACLMessage.CFP));
+		b = new MsgReceiver(a, mt, -1, getDataStore(), SOA_KEY);
 		registerFirstState(b, RECEIVE_INFORM_START_OF_AUCTION);
 		registerDefaultTransition(RECEIVE_INFORM_START_OF_AUCTION, RECEIVE_CFP);
 
 		/* receive CFP */
-		b = new MsgReceiver(a, /*mt*/null, -1, getDataStore(), CFP_KEY);
+		b = new MsgReceiver(a, mt, -1, getDataStore(), CFP_KEY);
 		registerState(b, RECEIVE_CFP);
 		registerDefaultTransition(RECEIVE_CFP, HANDLE_CFP);
 
