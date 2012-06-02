@@ -5,19 +5,25 @@ import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.DataStore;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
+import jade.proto.Initiator.ProtocolSession;
+import jade.util.leap.Serializable;
 
 
 import java.util.Vector;
 
-public class DutchAuctionInitiator extends Initiator {
-
+public abstract class DutchAuctionInitiator extends Initiator {
 
     private static final String HANDLE_PROPOSE = "Handle-propose";
-    private static final String HANDLE_ALL_RESPONSES = "Handle-all-responses";
+    private static final String TIMEOUT = "timeout";
+    private static final String CHECK_CONTINUE = "Check-continue";
+    private static final String END_AUCTION = "End-auction";
 
-    private static final int DROP_PRICE = 42;
-    private static final int SOLD = 43;
+    private static final int CONTINUE = 42;
+    private static final int ABORT = 43;
 
+    // When step == 1 we deal with CFP 
+ 	// When step == 2 we deal with ACCEPT_PROPOSAL
+ 	private int step = 1;
     /**
      * key to retrieve from the DataStore of the behaviour the vector of
      * ACCEPT/REJECT_PROPOSAL ACLMessage objects that have to be sent
@@ -38,43 +44,76 @@ public class DutchAuctionInitiator extends Initiator {
 
         // FSM
         registerTransition(CHECK_IN_SEQ, HANDLE_PROPOSE, ACLMessage.PROPOSE);
-        registerDefaultTransition(HANDLE_PROPOSE, CHECK_SESSIONS);
-        registerDefaultTransition(CHECK_SESSIONS, HANDLE_ALL_RESPONSES);
-        registerTransition(HANDLE_ALL_RESPONSES, SEND_INITIATIONS, DROP_PRICE);
-        registerTransition(HANDLE_ALL_RESPONSES, DUMMY_FINAL, SOLD);
+        registerDefaultTransition(HANDLE_PROPOSE, END_AUCTION);
+        registerDefaultTransition(CHECK_SESSIONS, TIMEOUT);
+        registerDefaultTransition(TIMEOUT, CHECK_CONTINUE);
+        registerTransition(CHECK_CONTINUE, PREPARE_INITIATIONS, CONTINUE);
+        registerTransition(CHECK_CONTINUE, END_AUCTION, ABORT);
+        
 
         // Create and register the states specific to the protocol
         Behaviour b = null;
         // HANDLE_PROPOSE
         b = new OneShotBehaviour(myAgent) {
-            private static final long     serialVersionUID = 3487495895819003L;
-
             public void action() {
                 Vector acceptances = (Vector) getDataStore().get(ALL_ACCEPTANCES_KEY);
                 ACLMessage propose = (ACLMessage) getDataStore().get(REPLY_K);
-                handlePropose(propose, acceptances);
+                handleBid(propose, acceptances);
             }
         };
+        
         b.setDataStore(getDataStore());
         registerState(b, HANDLE_PROPOSE);
 
-        // HANDLE_ALL_RESPONSES
+        // HANDLE_TIMEOUT
         b = new OneShotBehaviour(myAgent) {
 
             public void action() {
                 Vector responses = (Vector) getDataStore().get(ALL_RESPONSES_KEY);
                 Vector acceptances = (Vector) getDataStore().get(ALL_ACCEPTANCES_KEY);
-                handleAllResponses(responses, acceptances);
+                handleTimeout(responses, acceptances);
             }
         };
         b.setDataStore(getDataStore());
-        registerState(b, HANDLE_ALL_RESPONSES);
+        registerState(b, TIMEOUT);
+        
+        b = new OneShotBehaviour(myAgent) {
+			
+			@Override
+			public void action() {
+				
+			}
+			
+			@Override
+			public int onEnd() {				
+				return endAuction() ? CONTINUE : ABORT;  
+			}
+		};
+		
+		b.setDataStore(getDataStore());
+		registerState(b, END_AUCTION);
+		
+		b = new OneShotBehaviour() {
+			
+			@Override
+			public void action() {
+				// TODO Auto-generated method stub
+				
+			}
+		};
 	}
+
+    protected void handleTimeout(Vector responses, Vector acceptances) {		
+	}
+
+	protected abstract boolean endAuction();
+    protected abstract ACLMessage prepareCFP();
 
 	@Override
 	protected Vector prepareInitiations(ACLMessage initiation) {
         return prepareCfps(initiation);
     }
+	
 
     /**
      Check whether a reply is in-sequence and update the appropriate Session
@@ -107,40 +146,20 @@ public class DutchAuctionInitiator extends Initiator {
         return null;
     }
 
-    /**
-     * This method is called every time a <code>propose</code>
-     * message is received, which is not out-of-sequence according
-     * to the protocol rules.
-     * This default implementation does nothing; programmers might
-     * wish to override the method in case they need to react to this event.
-     * @param propose the received propose message
-     * @param acceptances the list of ACCEPT/REJECT_PROPOSAL to be sent back.
-     * This list can be filled step by step redefining this method, or
-     * it can be filled at once
-     * redefining the handleAllResponses method.
-     **/
-    protected void handlePropose(ACLMessage propose, Vector acceptances) {
+
+    protected void handleBid(ACLMessage propose, Vector accept) {
     }
 
     /**
-     * This method is called when all the responses have been
-     * collected or when the timeout is expired.
-     * The used timeout is the minimum value of the slot <code>replyBy</code>
-     * of all the sent messages.
-     * By response message we intend here all the <code>propose, not-understood,
-     * refuse</code> received messages, which are not
-     * not out-of-sequence according
-     * to the protocol rules.
-     * This default implementation does nothing; programmers might
-     * wish to override the method in case they need to react to this event
-     * by analysing all the messages in just one call.
-     * @param responses the Vector of ACLMessage objects that have been received
-     * @param acceptances the list of ACCEPT/REJECT_PROPOSAL to be sent back.
-     * This list can be filled at once redefining this method, or step by step
-     * redefining the handlePropose method.
-     **/
-    protected void handleAllResponses(Vector responses, Vector acceptances) {
-    }
+    Initialize the data store. 
+	 **/
+	protected void initializeDataStore(ACLMessage msg){
+		super.initializeDataStore(msg);
+		DataStore ds = getDataStore();
+		Vector l = new Vector();
+		l = new Vector();
+		ds.put(ALL_ACCEPTANCES_KEY, l);
+	}
 
     /**
      * This method must return the vector of ACLMessage objects to be
@@ -158,5 +177,66 @@ public class DutchAuctionInitiator extends Initiator {
         Vector v = new Vector(1);
         v.addElement(cfp);
         return v;
-    }
+    }   
+    
+    
+    /**
+    Inner class Session
+	 */
+	class Session implements ProtocolSession, Serializable {
+		// Session states
+		static final int INIT = 0;
+		static final int REPLY_RECEIVED = 1;
+
+		private int state = INIT;
+		private int step;
+
+		public Session(int step) {
+			this.step = step;
+		}
+
+		public String getId() {
+			return null;
+		}
+
+		/** Return true if received ACLMessage is consistent with the protocol */
+		public boolean update(int perf) {
+			if (state == INIT) {
+				if (step == 1) {
+					switch (perf) {
+					case ACLMessage.PROPOSE:
+					case ACLMessage.NOT_UNDERSTOOD:
+					case ACLMessage.FAILURE:
+						state = REPLY_RECEIVED;
+						return true;
+					default:
+						return false;
+					}
+				}
+				else {
+					switch (perf) {
+					case ACLMessage.INFORM:
+					case ACLMessage.NOT_UNDERSTOOD:
+					case ACLMessage.FAILURE:
+						state = REPLY_RECEIVED;
+						return true;
+					default:
+						return false;
+					}
+				}
+			}
+			else {
+				return false;
+			}
+		}
+
+
+		public int getState() {
+			return state;
+		}
+
+		public boolean isCompleted() {
+			return (state == REPLY_RECEIVED);
+		}
+	} // End of inner class Session
 }
