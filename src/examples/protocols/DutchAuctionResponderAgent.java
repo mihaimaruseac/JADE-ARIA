@@ -28,7 +28,7 @@ public class DutchAuctionResponderAgent extends Agent
 			@Override
 			protected boolean handleCfp(ACLMessage cfp)
 			{
-				System.out.println("Agent " + getLocalName() + ": CFP received from " + cfp.getSender().getName() + ". Action is " + cfp.getContent());
+				log("CFP received from " + cfp.getSender().getName() + ". Action is " + cfp.getContent());
 				
 				return shouldPropose(cfp);
 			}
@@ -64,7 +64,8 @@ public class DutchAuctionResponderAgent extends Agent
 	 */
 	protected boolean shouldPropose(ACLMessage cfp)
 	{
-		return (Math.random() > 0.1);
+//		return false;
+		return (Math.random() > 0.9);
 	}
 	
 	/**

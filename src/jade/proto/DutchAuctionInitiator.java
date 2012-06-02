@@ -114,6 +114,15 @@ public abstract class DutchAuctionInitiator extends Initiator {
         return prepareCfps(initiation);
     }
 	
+	protected void sendInitiations(Vector initiations) {
+		// By default the initiations parameter points to the Vector of the CFPs. 
+		// However at step 2 we need to deal with the acceptances
+/*		if (step == 1) {
+			initiations = (Vector) getDataStore().get(ALL_ACCEPTANCES_KEY);
+		}*/
+
+		super.sendInitiations(initiations);
+	}
 
     /**
      Check whether a reply is in-sequence and update the appropriate Session
@@ -174,8 +183,9 @@ public abstract class DutchAuctionInitiator extends Initiator {
      * by this class.
      **/
     protected Vector prepareCfps(ACLMessage cfp) {
+    	System.out.println(cfp.toString());
         Vector v = new Vector(1);
-        v.addElement(cfp);
+        v.addElement(cfp);	
         return v;
     }   
     

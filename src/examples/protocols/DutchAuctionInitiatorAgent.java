@@ -33,22 +33,30 @@ public class DutchAuctionInitiatorAgent extends Agent {
 		args = getArguments();
 		if (args != null && args.length > 0) {
 			numBidders = args.length;
-			System.out.println("There are: " + numBidders + " responders.");
+			System.out.println("["+getLocalName()+"] There are: " + numBidders + " responders.");
 
 			ACLMessage cfp = getCfp(args);
 
-			addBehaviour(new DutchAuctionInitiator(this, cfp) {
-				
+			addBehaviour(new DutchAuctionInitiator(this, cfp) {				
 
 				protected void handleBid(ACLMessage bid, ACLMessage accept) {
 					accept = bid.createReply();
 					accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 					System.out.println("Sold to: " + bid.getSender().getName());
 				}
+				
+				protected void handleTimeout(Vector responses, Vector acceptances) {
+					if (endAuction()){
+						 System.out.println("end");
+					} else {
+						acceptances.add(prepareCFP());
+					}
+						
+				}
 
 				@Override
 				protected boolean endAuction() {
-					return crtPrice-- < minPrice;
+					return crtPrice < minPrice;
 				}
 
 				@Override

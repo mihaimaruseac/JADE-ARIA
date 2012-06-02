@@ -32,13 +32,13 @@ public class DutchAuctionResponder extends SSResponder {
 
 		/* receive INFORM_START_OF_AUCTION */
 		MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_DUTCH_AUCTION),MessageTemplate.MatchPerformative(ACLMessage.CFP));
-		b = new MsgReceiver(a, mt, -1, getDataStore(), SOA_KEY);
-		registerFirstState(b, RECEIVE_INFORM_START_OF_AUCTION);
-		registerDefaultTransition(RECEIVE_INFORM_START_OF_AUCTION, RECEIVE_CFP);
+//		b = new MsgReceiver(a, mt, -1, getDataStore(), SOA_KEY);
+//		registerFirstState(b, RECEIVE_INFORM_START_OF_AUCTION);
+//		registerDefaultTransition(RECEIVE_INFORM_START_OF_AUCTION, RECEIVE_CFP);
 
 		/* receive CFP */
 		b = new MsgReceiver(a, mt, -1, getDataStore(), CFP_KEY);
-		registerState(b, RECEIVE_CFP);
+		registerFirstState(b, RECEIVE_CFP);
 		registerDefaultTransition(RECEIVE_CFP, HANDLE_CFP);
 
 		/* handle CFP */
@@ -49,7 +49,7 @@ public class DutchAuctionResponder extends SSResponder {
 		registerDefaultTransition(HANDLE_CFP, RECEIVE_CFP);
 
 		/* handle SEND_REPLY */
-		deregisterDefaultTransition(SEND_REPLY);
+//		deregisterDefaultTransition(SEND_REPLY);
 		registerTransition(SEND_REPLY, RECEIVE_NEXT, ACLMessage.PROPOSE);
 
 		/* handle RECEIVE_NEXT & CHECK_IN_SEQ */
@@ -91,8 +91,13 @@ public class DutchAuctionResponder extends SSResponder {
 		public void action() {
 			DutchAuctionResponder parent = (DutchAuctionResponder) getParent();
 			if (parent.handleCfp((ACLMessage) getDataStore().get(parent.CFP_KEY))) {
+				System.out.println(myAgent.getLocalName() + ": " + true);
+				ACLMessage cfp = (ACLMessage) getDataStore().get(parent.CFP_KEY);
+				ACLMessage reply = cfp.createReply();
+				getDataStore().put(parent.REPLY_KEY, reply);
 				ret = CFP_ACCEPTED;
 			} else {
+				System.out.println(myAgent.getLocalName() + ": " + false);
 				ret = CFP_DENIED;
 			}
 		}
