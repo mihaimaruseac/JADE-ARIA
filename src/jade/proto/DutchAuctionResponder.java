@@ -43,7 +43,7 @@ public class DutchAuctionResponder extends SSResponder {
 
 		/* handle CFP */
 		b = new CfpHandler(myAgent);
-		registerFirstState(b, HANDLE_CFP);
+		registerState(b, HANDLE_CFP);
 		b.setDataStore(getDataStore());
 		registerTransition(HANDLE_CFP, SEND_REPLY, CfpHandler.CFP_ACCEPTED);
 		registerDefaultTransition(HANDLE_CFP, RECEIVE_CFP);
