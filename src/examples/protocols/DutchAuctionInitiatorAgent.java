@@ -1,6 +1,6 @@
 package examples.protocols;
 
-public class DutchAuctionInitiatorAgent
+public class DutchAuctionInitiatorAgent extends Agent
 {
 	
 }
