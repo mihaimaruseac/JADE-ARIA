@@ -1,0 +1,32 @@
+https://github.com/mihaimaruseac/JADE-ARIA.git
+git@github.com:mihaimaruseac/JADE-ARIA.git
+
+collabedit.com/w3pqa
+
+
+Exemplu
+  DutchAuctionInitiatorAgent
+  DutchAuctionResponderAgent
+  - ambele extend Agent
+  - utilizeaza behaviors:
+    - DutchAuctionInitiator  -> Anca
+    - DutchAuctionResponder  -> Andrei
+
+
+Protocol
+  DutchAuctionInitiator - behavior
+    extinde Initiator  -> Mihnea
+  DutchAuctionResponder - behavior
+    extinde SSResponder  -> Mihai
+
+
+
+English http://www.fipa.org/specs/fipa00031/XC00031F.pdf
+Dutch http://www.fipa.org/specs/fipa00032/XC00032F.pdf
+
+AndreiO: Exemplu Resonder
+Mihnea: Initiator
+AndreiC: 
+Anca: Exemplu Initiator
+Mihai: Responder
+Ovidiu: 
